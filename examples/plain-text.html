@@ -6,8 +6,10 @@
     <title>Save plain text as you type</title>
   </head>
   <body>
-    <script src="https://cdn.jsdelivr.net/webtorrent/latest/webtorrent.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/web-streams-polyfill@2.0.2/dist/ponyfill.min.js"></script>
+    <!-- <script src="https://unpkg.com/webtorrent@2.5.10/index.js"></script> -->
+    <script src="../lib/webtorrent.index.js"></script>
+    <!-- <script src="https://unpkg.com/web-streams-polyfill@4.0.0/dist/ponyfill.js"></script> -->
+    <script src="../lib/ponyfill.js"></script>
     <script src="../StreamSaver.js"></script>
 
     <p>1) Set a filename</p>
@@ -20,10 +22,9 @@
     <button id="$a">Write some aaa's</button>
     <button id="$b">Write some bbb's</button>
     <button id="$c">Write some ccc's</button>
-    <button id="$ipsum">Write a lot of Lorem ipsum</button><br>
+    <button id="$ipsum">Write a lot of Lorem ipsum</button>
     <input type="text" id="$custom" placeholder="custom text">
-      (may look like nothing is happening, but writes all keystorke to fileStream)
-
+    <button id="$custombtn">go</button><br>
     <hr>
 
     <p>3) Abort for cancel, close for ending the write stream</p>
@@ -63,8 +64,7 @@
         document.body.innerHTML = '<a href="./plain-text.html">Try again</a>'
       }
 
-      $a.onclick = $b.onclick = $c.onclick = $ipsum.onclick = $custom.oninput = evt => {
-
+      $a.onclick = $b.onclick = $c.onclick = $ipsum.onclick = $custombtn.onclick = evt => {
         if (evt.target === $ipsum) {
           var n = ~~prompt("How many MiB of lorem ipsum text do you want?", '1024')
         }
@@ -76,26 +76,27 @@
           $abort.disabled = $close.disabled = false
         }
 
-
-        var data
-
-        if (evt.target === $a) data = a
-        if (evt.target === $b) data = b
-        if (evt.target === $c) data = c
-        if (evt.target === $custom) data = encode($custom.value)
-
-        $custom.value = ''
-
-        data && writer.write(data)
-
         if (evt.target === $ipsum) {
           let que = Promise.resolve()
           let pump = () => {
+            if (n === 0) writer.close()
             n-- && que.then(() => {
               writer.write(text).then(()=>{setTimeout(pump)})
             })
           }
           pump()
+        } else {
+          var data
+
+          if (evt.target === $a) data = a
+          if (evt.target === $b) data = b
+          if (evt.target === $c) data = c
+          if (evt.target === $custombtn) data = encode($custom.value)
+
+          $custom.value = ''
+
+          data && writer.write(data)
+          writer.close()
         }
       }
     </script>
